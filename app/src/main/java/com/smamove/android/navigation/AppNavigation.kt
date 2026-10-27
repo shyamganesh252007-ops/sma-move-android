@@ -153,6 +153,7 @@ fun AppNavigation() {
         // MoveTrack: session information
         composable(Routes.MOVETRACK_SESSION_INFO) {
             MoveTrackSessionInfoScreen(
+
                 onContinue = {
                     navController.navigate(
                         Routes.MOVETRACK_CONSENT_OPTIONS

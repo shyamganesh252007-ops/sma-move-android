@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -19,7 +19,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -29,28 +28,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.smamove.android.ui.theme.SMAAndroidTheme
 
 @Composable
 fun PatientLoginScreen(
     onNavigateBack: () -> Unit,
-    onLoginSuccess: () -> Unit,
-    viewModel: AuthViewModel = viewModel()
+    onLoginSuccess: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var demoLoginSuccessful by rememberSaveable { mutableStateOf(false) }
 
     PatientLoginContent(
-        uiState = uiState,
         email = email,
         password = password,
-        onEmailChange = { email = it },
-        onPasswordChange = { password = it },
+        errorMessage = errorMessage,
+        demoLoginSuccessful = demoLoginSuccessful,
+        onEmailChange = {
+            email = it
+            errorMessage = null
+        },
+        onPasswordChange = {
+            password = it
+            errorMessage = null
+        },
         onSignIn = {
-            viewModel.submitPatientLogin(email.trim(), password)
+            if (email.isBlank() || password.isBlank()) {
+                errorMessage = "Enter any email and password to continue."
+            } else {
+                // Demo-only access. No real authentication is performed.
+                demoLoginSuccessful = true
+                errorMessage = null
+            }
         },
         onNavigateBack = onNavigateBack,
         onLoginSuccess = onLoginSuccess
@@ -59,9 +69,10 @@ fun PatientLoginScreen(
 
 @Composable
 private fun PatientLoginContent(
-    uiState: AuthUiState,
     email: String,
     password: String,
+    errorMessage: String?,
+    demoLoginSuccessful: Boolean,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSignIn: () -> Unit,
@@ -88,14 +99,14 @@ private fun PatientLoginContent(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "SMA-Move prototype · Real authentication is not connected.",
+                text = "SMA-Move prototype · Demo Mode",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
 
             Spacer(Modifier.height(24.dp))
 
-            if (uiState.isSuccess) {
+            if (demoLoginSuccessful) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primaryContainer,
@@ -112,7 +123,9 @@ private fun PatientLoginContent(
                         Spacer(Modifier.height(12.dp))
 
                         Text(
-                            text = "Your demo credentials were accepted. No real account was authenticated, and no real patient records were accessed.",
+                            text = "Demo access only. No account was authenticated, " +
+                                    "no password was saved, and no real patient records " +
+                                    "were accessed.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -139,9 +152,9 @@ private fun PatientLoginContent(
                     value = email,
                     onValueChange = onEmailChange,
                     label = { Text("Email") },
+                    placeholder = { Text("Enter any email") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    enabled = !uiState.isLoading
+                    singleLine = true
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -150,25 +163,24 @@ private fun PatientLoginContent(
                     value = password,
                     onValueChange = onPasswordChange,
                     label = { Text("Password") },
+                    placeholder = { Text("Enter any password") },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    enabled = !uiState.isLoading
+                    singleLine = true
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = "Demo account: demo@smamove.com / password",
+                    text = "Demo mode: any non-empty email and password will work.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
 
-                if (uiState.error != null) {
+                if (errorMessage != null) {
                     Spacer(Modifier.height(12.dp))
-
                     Text(
-                        text = uiState.error,
+                        text = errorMessage,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -180,25 +192,16 @@ private fun PatientLoginContent(
                     onClick = onSignIn,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                    enabled = !uiState.isLoading
+                        .heightIn(min = 52.dp)
                 ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.height(24.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Sign In")
-                    }
+                    Text("Sign In")
                 }
 
                 Spacer(Modifier.height(12.dp))
 
                 TextButton(
                     onClick = onNavigateBack,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isLoading
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Back to Roles")
                 }
@@ -212,9 +215,10 @@ private fun PatientLoginContent(
 private fun PatientLoginPreview() {
     SMAAndroidTheme {
         PatientLoginContent(
-            uiState = AuthUiState(),
             email = "",
             password = "",
+            errorMessage = null,
+            demoLoginSuccessful = false,
             onEmailChange = {},
             onPasswordChange = {},
             onSignIn = {},
@@ -229,9 +233,10 @@ private fun PatientLoginPreview() {
 private fun PatientLoginSuccessPreview() {
     SMAAndroidTheme {
         PatientLoginContent(
-            uiState = AuthUiState(isSuccess = true),
             email = "",
             password = "",
+            errorMessage = null,
+            demoLoginSuccessful = true,
             onEmailChange = {},
             onPasswordChange = {},
             onSignIn = {},
@@ -240,4 +245,3 @@ private fun PatientLoginSuccessPreview() {
         )
     }
 }
-

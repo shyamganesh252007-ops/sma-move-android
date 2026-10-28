@@ -1,377 +1,375 @@
-
 package com.smamove.android.feature.patient
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.smamove.android.feature.careplan.CarePlanTask
 import com.smamove.android.feature.careplan.CarePlanViewModel
-
-private val StitchBackground = Color(0xFFF8F9FF)
-private val StitchSurface = Color(0xFFEFF4FF)
-private val StitchBlue = Color(0xFFDCE9FF)
-private val StitchPrimary = Color(0xFF00685F)
-private val StitchTeal = Color(0xFF008378)
-private val StitchInk = Color(0xFF0B1C30)
-private val StitchMuted = Color(0xFF52616B)
-private val StitchWhite = Color.White
+import com.smamove.android.feature.journal.JournalViewModel
 
 @Composable
 fun PatientDashboardScreen(
     carePlanViewModel: CarePlanViewModel,
+    journalViewModel: JournalViewModel,
     onOpenMoveTrack: () -> Unit = {},
     onOpenCarePlan: () -> Unit = {},
     onOpenJournal: () -> Unit = {},
-    onOpenAppointments: () -> Unit = {},
-    onOpenCareCircle: () -> Unit = {}
+    onOpenMoveTrackPrivacy: () -> Unit = {}
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val tasks = carePlanViewModel.tasks
     val completedCount by remember {
         derivedStateOf { carePlanViewModel.completedCount }
     }
+    val entries = journalViewModel.entries
+    val latestEntry = entries.firstOrNull()
+    val progress = if (tasks.isEmpty()) 0f else completedCount.toFloat() / tasks.size
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 180),
+        label = "dashboard-care-progress"
+    )
 
-    val progress = if (tasks.isEmpty()) {
-        0f
-    } else {
-        completedCount.toFloat() / tasks.size
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(StitchBackground)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Dashboard header
-        Column {
-            Text(
-                text = "SMA-Move",
-                color = StitchPrimary,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = colorScheme.background
+        ) {}
 
-            Spacer(Modifier.height(6.dp))
-
-            Text(
-                text = "Good morning, Alex 👋",
-                fontSize = 25.sp,
-                color = StitchInk,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                text = "Your care journey, one day at a time.",
-                color = StitchMuted,
-                fontSize = 14.sp
-            )
-        }
-
-        // Wellbeing Journal shortcut
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = StitchBlue
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 720.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
-            Column(Modifier.padding(20.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "✦  DAILY WELLBEING",
-                    color = StitchPrimary,
-                    fontSize = 12.sp,
+                    text = "SMA-MOVE  /  TODAY",
+                    color = colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
-
-                Spacer(Modifier.height(8.dp))
-
                 Text(
-                    text = "How are you feeling today?",
-                    fontSize = 21.sp,
-                    color = StitchInk,
-                    fontWeight = FontWeight.Bold
+                    text = "Welcome back",
+                    color = colorScheme.onBackground,
+                    style = MaterialTheme.typography.displaySmall
                 )
-
-                Spacer(Modifier.height(6.dp))
-
                 Text(
-                    text = "Record your mood, comfort level, and " +
-                            "anything you would like to note.",
-                    fontSize = 14.sp,
-                    color = StitchMuted,
-                    lineHeight = 21.sp
+                    text = "Your care, at your pace.",
+                    color = colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge
                 )
-
-                Spacer(Modifier.height(14.dp))
-
-                Button(
-                    onClick = onOpenJournal,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = StitchPrimary,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Open Wellbeing Journal")
-                }
             }
-        }
 
-        // Care tasks
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = StitchWhite
+            CarePlanOverview(
+                tasks = tasks,
+                completedCount = completedCount,
+                progress = animatedProgress,
+                onOpenCarePlan = onOpenCarePlan
             )
+
+            WellbeingOverview(
+                latestEntryLabel = latestEntry?.let {
+                    journalViewModel.formatDate(it.timestamp)
+                },
+                onOpenJournal = onOpenJournal
+            )
+
+            HorizontalDivider(color = colorScheme.outlineVariant)
+
+            MoveTrackOverview(
+                onOpenMoveTrack = onOpenMoveTrack,
+                onOpenPrivacySettings = onOpenMoveTrackPrivacy
+            )
+
+            UnavailableFeatures()
+        }
+    }
+}
+
+@Composable
+private fun CarePlanOverview(
+    tasks: List<CarePlanTask>,
+    completedCount: Int,
+    progress: Float,
+    onOpenCarePlan: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = colorScheme.surface,
+        border = BorderStroke(1.dp, colorScheme.outlineVariant),
+        tonalElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "Today's care tasks",
-                    fontSize = 20.sp,
-                    color = StitchInk,
+                    text = "Care plan",
+                    color = colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "SAMPLE TASKS",
+                    color = colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
+            }
 
-                Spacer(Modifier.height(6.dp))
-
+            if (tasks.isEmpty()) {
                 Text(
-                    text = "$completedCount of ${tasks.size} tasks completed",
-                    fontSize = 14.sp,
-                    color = StitchMuted
+                    text = "No care tasks are available yet.",
+                    color = colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
                 )
-
-                Spacer(Modifier.height(12.dp))
-
+            } else {
+                Text(
+                    text = "$completedCount of ${tasks.size} example tasks checked off",
+                    color = colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 LinearProgressIndicator(
                     progress = { progress },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = StitchTeal,
-                    trackColor = StitchSurface
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics {
+                            contentDescription =
+                                "$completedCount of ${tasks.size} example care-plan tasks checked off"
+                        },
+                    color = colorScheme.primary,
+                    trackColor = colorScheme.surfaceVariant
                 )
 
-                Spacer(Modifier.height(12.dp))
-
                 tasks.take(3).forEach { task ->
+                    key(task.id) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 9.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Text(
                                 text = task.title,
-                                color = StitchInk,
+                                color = colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
-
-                            Spacer(Modifier.height(3.dp))
-
                             Text(
-                                text = task.duration,
-                                color = StitchMuted,
-                                fontSize = 12.sp
+                                text = "${task.category} · ${task.duration}",
+                                color = colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
-
                         Text(
-                            text = if (task.isCompleted) {
-                                "✓ Done"
-                            } else {
-                                "Pending"
-                            },
+                            text = if (task.isCompleted) "Checked off" else "Not yet",
                             color = if (task.isCompleted) {
-                                StitchPrimary
+                                colorScheme.primary
                             } else {
-                                StitchMuted
+                                colorScheme.onSurfaceVariant
                             },
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium
                         )
                     }
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedButton(
-                    onClick = onOpenCarePlan,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Text(
-                        text = "View all care tasks",
-                        color = StitchInk
-                    )
+                    }
                 }
             }
-        }
 
-        // MoveTrack
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = StitchSurface
-            )
+            OutlinedButton(
+                onClick = onOpenCarePlan,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Open full care plan")
+            }
+        }
+    }
+}
+
+@Composable
+private fun WellbeingOverview(
+    latestEntryLabel: String?,
+    onOpenJournal: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = colorScheme.secondaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(18.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(Modifier.padding(20.dp)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
                 Text(
-                    text = "MoveTrack",
-                    fontSize = 21.sp,
-                    color = StitchInk,
-                    fontWeight = FontWeight.Bold
+                    text = "Wellbeing check-in",
+                    color = colorScheme.onSecondaryContainer,
+                    style = MaterialTheme.typography.titleMedium
                 )
-
-                Spacer(Modifier.height(6.dp))
-
                 Text(
-                    text = "Optional camera-based movement sessions. " +
-                            "This feature is being developed with privacy " +
-                            "and patient consent in mind.",
-                    color = StitchMuted,
-                    fontSize = 14.sp,
-                    lineHeight = 22.sp
+                    text = latestEntryLabel?.let { "Last saved $it" }
+                        ?: "Whenever you’re ready, you can check in.",
+                    color = colorScheme.onSecondaryContainer,
+                    style = MaterialTheme.typography.bodyMedium
                 )
-
-                Spacer(Modifier.height(14.dp))
-
-                Button(
-                    onClick = onOpenMoveTrack,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = StitchTeal,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Explore MoveTrack")
-                }
+            }
+            Button(
+                onClick = onOpenJournal,
+                modifier = Modifier.heightIn(min = 48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(if (latestEntryLabel == null) "Check in" else "Open")
             }
         }
+    }
+}
 
-        // Appointments placeholder
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = StitchWhite
-            )
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text(
-                    text = "Appointments",
-                    fontSize = 20.sp,
-                    color = StitchInk,
-                    fontWeight = FontWeight.Bold
-                )
+@Composable
+private fun MoveTrackOverview(
+    onOpenMoveTrack: () -> Unit,
+    onOpenPrivacySettings: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
 
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    text = "Keep your upcoming care appointments organised.",
-                    color = StitchMuted,
-                    fontSize = 14.sp,
-                    lineHeight = 22.sp
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = onOpenAppointments,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Text("View appointments", color = StitchInk)
-                }
-            }
-        }
-
-        // CareCircle placeholder
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = StitchWhite
-            )
-        ) {
-            Column(Modifier.padding(20.dp)) {
-                Text(
-                    text = "Your CareCircle",
-                    fontSize = 20.sp,
-                    color = StitchInk,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    text = "Patient-approved caregiver coordination.",
-                    color = StitchMuted,
-                    fontSize = 14.sp,
-                    lineHeight = 22.sp
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = onOpenCareCircle,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Text("Open CareCircle", color = StitchInk)
-                }
-            }
-        }
-
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Demo dashboard • Sample content only",
+            text = "MoveTrack",
+            color = colorScheme.onBackground,
+            style = MaterialTheme.typography.titleLarge
+        )
+        Text(
+            text = "Optional research prototype. It does not provide a diagnosis or a clinically validated assessment.",
+            color = colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Button(
+            onClick = onOpenMoveTrack,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            color = StitchMuted,
-            fontSize = 12.sp
+                .heightIn(min = 48.dp),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text("Review consent information")
+        }
+        OutlinedButton(
+            onClick = onOpenPrivacySettings,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text("MoveTrack privacy settings")
+        }
+    }
+}
+
+@Composable
+private fun UnavailableFeatures() {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Not available in this prototype",
+            color = colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.titleMedium
+        )
+        UnavailableFeatureRow(
+            title = "Appointments and reminders",
+            detail = "No appointment source or reminder scheduling is connected."
+        )
+        UnavailableFeatureRow(
+            title = "CareCircle",
+            detail = "Caregiver accounts and record sharing are not implemented."
+        )
+    }
+}
+
+@Composable
+private fun UnavailableFeatureRow(
+    title: String,
+    detail: String
+) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Text(
+            text = title,
+            color = colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
+        Text(
+            text = detail,
+            color = colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }

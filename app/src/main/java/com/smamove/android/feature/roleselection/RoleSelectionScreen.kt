@@ -1,7 +1,6 @@
 package com.smamove.android.feature.roleselection
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,9 +9,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,19 +30,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.smamove.android.ui.theme.SMAAndroidTheme
-
-private val Teal = Color(0xFF087F72)
-private val PageBackground = Color(0xFFF7F8FC)
-private val CardBackground = Color(0xFFEDF2FF)
-private val PrimaryText = Color(0xFF17243A)
-private val SecondaryText = Color(0xFF586579)
 
 @Composable
 fun RoleSelectionScreen(
@@ -63,21 +58,23 @@ private fun RoleSelectionContent(
     onRoleSelected: (UserRole) -> Unit,
     onContinueClicked: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = PageBackground
+        containerColor = colors.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(PageBackground)
+                .background(colors.background)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
-                color = Color(0xFFDCE8FF),
+                color = colors.secondaryContainer,
                 shape = RoundedCornerShape(50.dp)
             ) {
                 Text(
@@ -86,7 +83,7 @@ private fun RoleSelectionContent(
                         horizontal = 14.dp,
                         vertical = 8.dp
                     ),
-                    color = Teal,
+                    color = colors.onSecondaryContainer,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -97,13 +94,13 @@ private fun RoleSelectionContent(
                 text = "Welcome to SMA-Move",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryText
+                color = colors.onBackground
             )
 
             Text(
                 text = "Your care, your movement, your choice.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = SecondaryText
+                color = colors.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -120,10 +117,11 @@ private fun RoleSelectionContent(
                 onClick = onContinueClicked,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp),
+                    .heightIn(min = 52.dp),
                 shape = RoundedCornerShape(15.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Teal
+                    containerColor = colors.primary,
+                    contentColor = colors.onPrimary
                 )
             ) {
                 Text(
@@ -137,13 +135,13 @@ private fun RoleSelectionContent(
 
             uiState.message?.let {
                 Surface(
-                    color = Color(0xFFDDF4EE),
+                    color = colors.primaryContainer,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = it,
                         modifier = Modifier.padding(14.dp),
-                        color = Color(0xFF075E54),
+                        color = colors.onPrimaryContainer,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -154,7 +152,7 @@ private fun RoleSelectionContent(
             Text(
                 text = "Privacy-first care · Sharing stays under your control",
                 modifier = Modifier.fillMaxWidth(),
-                color = SecondaryText,
+                color = colors.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
@@ -167,16 +165,22 @@ private fun RoleCard(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .selectable(
+                selected = selected,
+                role = Role.RadioButton,
+                onClick = onClick
+            ),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (selected) {
-                Color(0xFFDDF1ED)
+                colors.primaryContainer
             } else {
-                CardBackground
+                colors.surfaceVariant
             }
         ),
         elevation = CardDefaults.cardElevation(
@@ -191,14 +195,14 @@ private fun RoleCard(
                 modifier = Modifier
                     .size(50.dp)
                     .background(
-                        color = Teal,
+                        color = colors.primary,
                         shape = RoundedCornerShape(15.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = role.symbol,
-                    color = Color.White,
+                    color = colors.onPrimary,
                     fontSize = 27.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -212,14 +216,14 @@ private fun RoleCard(
             ) {
                 Text(
                     text = role.title,
-                    color = PrimaryText,
+                    color = colors.onSurface,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
                     text = role.description,
-                    color = SecondaryText,
+                    color = colors.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 17.sp
                 )
@@ -227,7 +231,7 @@ private fun RoleCard(
                 if (role == UserRole.PROFESSIONAL) {
                     Text(
                         text = "Verification required",
-                        color = Teal,
+                        color = colors.primary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -238,12 +242,12 @@ private fun RoleCard(
                 Surface(
                     modifier = Modifier.size(25.dp),
                     shape = CircleShape,
-                    color = Teal
+                    color = colors.primary
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = "✓",
-                            color = Color.White,
+                            color = colors.onPrimary,
                             fontWeight = FontWeight.Bold
                         )
                     }

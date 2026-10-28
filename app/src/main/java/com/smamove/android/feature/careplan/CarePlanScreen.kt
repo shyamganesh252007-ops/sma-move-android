@@ -3,47 +3,56 @@ package com.smamove.android.feature.careplan
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-private val CareBackground = Color(0xFFF8F9FF)
-private val CareSurface = Color(0xFFEFF4FF)
-private val CareBlue = Color(0xFFDCE9FF)
-private val CareTeal = Color(0xFF008378)
-private val CareInk = Color(0xFF0B1C30)
-private val CareMuted = Color(0xFF3D4947)
-private val CareWhite = Color.White
 
 @Composable
 fun CarePlanScreen(
     viewModel: CarePlanViewModel,
     onBack: () -> Unit
 ) {
-    // CarePlanViewModel uses Compose snapshot state.
+    val colors = MaterialTheme.colorScheme
     val tasks = viewModel.tasks
     val completedCount by remember {
         derivedStateOf { viewModel.completedCount }
     }
+    val progress = if (tasks.isEmpty()) {
+        0f
+    } else {
+        completedCount.toFloat() / tasks.size
+    }
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 180),
+        label = "care-plan-progress"
+    )
 
     Scaffold(
-        containerColor = CareBackground,
+        containerColor = colors.background,
         topBar = {
             Row(
                 modifier = Modifier
@@ -54,13 +63,16 @@ fun CarePlanScreen(
             ) {
                 Surface(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clickable { onBack() },
+                        .size(48.dp)
+                        .clickable(role = Role.Button) { onBack() }
+                        .semantics {
+                            contentDescription = "Go back"
+                        },
                     shape = CircleShape,
-                    color = CareSurface
+                    color = colors.surfaceVariant
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("←", fontSize = 25.sp, color = CareInk)
+                        Text("←", fontSize = 25.sp, color = colors.onSurface)
                     }
                 }
 
@@ -71,13 +83,13 @@ fun CarePlanScreen(
                         "MY CARE PLAN",
                         fontSize = 11.sp,
                         letterSpacing = 1.2.sp,
-                        color = CareTeal,
+                        color = colors.primary,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         "Today's care",
                         fontSize = 23.sp,
-                        color = CareInk,
+                        color = colors.onSurface,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -97,12 +109,12 @@ fun CarePlanScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = CareBlue
+                color = colors.secondaryContainer
             ) {
                 Column(Modifier.padding(18.dp)) {
                     Text(
                         "DEMO CARE PLAN",
-                        color = CareTeal,
+                        color = colors.primary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.8.sp
@@ -111,7 +123,7 @@ fun CarePlanScreen(
                     Text(
                         "Example tasks for interface testing. " +
                                 "Use your actual care team's instructions for care decisions.",
-                        color = CareInk,
+                        color = colors.onSecondaryContainer,
                         fontSize = 14.sp,
                         lineHeight = 21.sp
                     )
@@ -122,7 +134,7 @@ fun CarePlanScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                color = CareTeal
+                color = colors.primary
             ) {
                 Column(
                     modifier = Modifier.padding(22.dp),
@@ -130,47 +142,52 @@ fun CarePlanScreen(
                 ) {
                     Text(
                         "YOUR DAILY PROGRESS",
-                        color = CareWhite.copy(alpha = 0.85f),
+                        color = colors.onPrimary.copy(alpha = 0.85f),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.8.sp
                     )
 
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
+                    if (tasks.isEmpty()) {
                         Text(
-                            "$completedCount",
-                            fontSize = 38.sp,
-                            color = CareWhite,
-                            fontWeight = FontWeight.Bold
+                            "No tasks are available in this plan yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onPrimary
                         )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                "$completedCount",
+                                fontSize = 38.sp,
+                                color = colors.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "of ${tasks.size} example tasks checked off",
+                                fontSize = 14.sp,
+                                color = colors.onPrimary
+                            )
+                        }
+
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(CircleShape),
+                            color = colors.onPrimary,
+                            trackColor = colors.onPrimary.copy(alpha = 0.25f)
+                        )
+
                         Text(
-                            "of ${tasks.size} tasks completed",
-                            fontSize = 14.sp,
-                            color = CareWhite
+                            "There’s no need to complete everything at once.",
+                            fontSize = 12.sp,
+                            color = colors.onPrimary
                         )
                     }
-
-                    LinearProgressIndicator(
-                        progress = {
-                            if (tasks.isEmpty()) 0f
-                            else completedCount.toFloat() / tasks.size
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(CircleShape),
-                        color = CareWhite,
-                        trackColor = CareWhite.copy(alpha = 0.25f)
-                    )
-
-                    Text(
-                        "Your progress updates when you check off a task.",
-                        fontSize = 12.sp,
-                        color = CareWhite
-                    )
                 }
             }
 
@@ -178,20 +195,40 @@ fun CarePlanScreen(
                 "Care tasks",
                 fontSize = 21.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = CareInk
+                color = colors.onSurface
             )
 
             tasks.forEach { task ->
                 val done = task.isCompleted
 
+                key(task.id) {
+                val taskSurfaceColor by animateColorAsState(
+                    targetValue = if (done) {
+                        colors.secondaryContainer
+                    } else {
+                        colors.surface
+                    },
+                    animationSpec = tween(durationMillis = 160),
+                    label = "care-task-surface-${task.id}"
+                )
+                val taskIconColor by animateColorAsState(
+                    targetValue = if (done) colors.onPrimary else colors.primary,
+                    animationSpec = tween(durationMillis = 160),
+                    label = "care-task-icon-${task.id}"
+                )
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            viewModel.toggleTask(task.id)
+                        .toggleable(
+                            value = done,
+                            role = Role.Checkbox,
+                            onValueChange = { viewModel.toggleTask(task.id) }
+                        )
+                        .semantics {
+                            stateDescription = if (done) "Complete" else "Not complete"
                         },
                     shape = RoundedCornerShape(17.dp),
-                    color = if (done) CareSurface else CareWhite,
+                    color = taskSurfaceColor,
                     shadowElevation = 1.dp
                 ) {
                     Row(
@@ -202,13 +239,13 @@ fun CarePlanScreen(
                         Surface(
                             modifier = Modifier.size(48.dp),
                             shape = RoundedCornerShape(14.dp),
-                            color = if (done) CareTeal else CareBlue
+                            color = if (done) colors.primary else colors.secondaryContainer
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     if (done) "✓" else "○",
                                     fontSize = 25.sp,
-                                    color = if (done) CareWhite else CareTeal
+                                    color = taskIconColor
                                 )
                             }
                         }
@@ -219,7 +256,7 @@ fun CarePlanScreen(
                         ) {
                             Text(
                                 task.title,
-                                color = CareInk,
+                                color = colors.onSurface,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 textDecoration = if (done) {
@@ -231,14 +268,14 @@ fun CarePlanScreen(
 
                             Text(
                                 task.description,
-                                color = CareMuted,
+                                color = colors.onSurfaceVariant,
                                 fontSize = 13.sp,
                                 lineHeight = 18.sp
                             )
 
                             Surface(
                                 shape = CircleShape,
-                                color = CareBlue
+                                color = colors.secondaryContainer
                             ) {
                                 Text(
                                     "${task.category} • ${task.duration}",
@@ -246,7 +283,7 @@ fun CarePlanScreen(
                                         horizontal = 9.dp,
                                         vertical = 5.dp
                                     ),
-                                    color = CareTeal,
+                                    color = colors.primary,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -254,13 +291,22 @@ fun CarePlanScreen(
                         }
                     }
                 }
+                }
+            }
+
+            if (tasks.isEmpty()) {
+                Text(
+                    text = "No care tasks are available yet.",
+                    color = colors.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             OutlinedButton(
                 onClick = onBack,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .heightIn(min = 48.dp),
                 shape = CircleShape
             ) {
                 Text("Back to dashboard")

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -34,24 +35,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val ConsentBg = Color(0xFFF5F8FC)
-private val ConsentInk = Color(0xFF10243A)
-private val ConsentMuted = Color(0xFF586B7B)
-private val ConsentTeal = Color(0xFF087F76)
-private val ConsentTealDark = Color(0xFF06665F)
-private val ConsentSoft = Color(0xFFE5F4F1)
 
 @Composable
 fun MoveTrackConsentOptionsScreen(
     onContinue: () -> Unit,
     onBack: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+    val ConsentBg = colors.background
+    val ConsentInk = colors.onSurface
+    val ConsentMuted = colors.onSurfaceVariant
+    val ConsentTeal = colors.primary
+    val ConsentTealDark = colors.primary
+    val ConsentSoft = colors.primaryContainer
+
     val context = LocalContext.current
     val store = remember(context) {
         MoveTrackConsentStore(context)
@@ -70,6 +75,9 @@ fun MoveTrackConsentOptionsScreen(
     }
 
     var isSaving by remember {
+        mutableStateOf(false)
+    }
+    var saveError by remember {
         mutableStateOf(false)
     }
 
@@ -185,7 +193,7 @@ fun MoveTrackConsentOptionsScreen(
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = colors.surface
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 0.dp
@@ -217,6 +225,7 @@ fun MoveTrackConsentOptionsScreen(
         Button(
             onClick = {
                 isSaving = true
+                saveError = false
 
                 try {
                     store.saveChoices(
@@ -232,6 +241,7 @@ fun MoveTrackConsentOptionsScreen(
 
                     onContinue()
                 } catch (exception: Exception) {
+                    saveError = true
                     Toast.makeText(
                         context,
                         "Could not save preferences. Please try again.",
@@ -244,13 +254,13 @@ fun MoveTrackConsentOptionsScreen(
             enabled = preferencesLoaded && !isSaving,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(17.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ConsentTealDark,
-                contentColor = Color.White,
-                disabledContainerColor = Color(0xFFCBD8D9),
-                disabledContentColor = Color(0xFF53666B)
+                contentColor = colors.onPrimary,
+                disabledContainerColor = colors.surfaceVariant,
+                disabledContentColor = colors.onSurfaceVariant
             )
         ) {
             Text(
@@ -264,12 +274,26 @@ fun MoveTrackConsentOptionsScreen(
             )
         }
 
+        if (saveError) {
+            Text(
+                text = "Preferences could not be saved. Your previous saved choices are unchanged.",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics {
+                        liveRegion = LiveRegionMode.Polite
+                    },
+                color = colors.error,
+                fontSize = 14.sp,
+                lineHeight = 21.sp
+            )
+        }
+
         OutlinedButton(
             onClick = onBack,
             enabled = !isSaving,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(17.dp)
         ) {
             Text(
@@ -301,11 +325,17 @@ private fun ConsentCard(
     description: String,
     content: @Composable () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+    val ConsentInk = colors.onSurface
+    val ConsentMuted = colors.onSurfaceVariant
+    val ConsentTealDark = colors.primary
+    val ConsentSoft = colors.primaryContainer
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = colors.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp
@@ -363,6 +393,12 @@ private fun ConsentCheck(
     title: String,
     description: String
 ) {
+    val colors = MaterialTheme.colorScheme
+    val ConsentInk = colors.onSurface
+    val ConsentMuted = colors.onSurfaceVariant
+    val ConsentTealDark = colors.primary
+    val ConsentSoft = colors.primaryContainer
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -381,7 +417,7 @@ private fun ConsentCheck(
             colors = CheckboxDefaults.colors(
                 checkedColor = ConsentTealDark,
                 uncheckedColor = ConsentMuted,
-                checkmarkColor = Color.White
+                checkmarkColor = colors.onPrimary
             )
         )
 

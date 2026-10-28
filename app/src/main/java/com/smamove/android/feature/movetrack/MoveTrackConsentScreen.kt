@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,22 +23,22 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val MoveBackground = Color(0xFFF8F9FF)
-private val MoveInk = Color(0xFF0B1C30)
-private val MoveMuted = Color(0xFF52616B)
-private val MoveTeal = Color(0xFF00685F)
-private val MoveCard = Color(0xFFEAF3F1)
 
 @Composable
 fun MoveTrackConsentScreen(
     onContinue: () -> Unit,
     onBack: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+    val MoveBackground = colors.background
+    val MoveInk = colors.onSurface
+    val MoveMuted = colors.onSurfaceVariant
+    val MoveTeal = colors.primary
+    val MoveCard = colors.primaryContainer
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -121,11 +122,11 @@ fun MoveTrackConsentScreen(
             onClick = onContinue,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MoveTeal,
-                contentColor = Color.White
+                contentColor = colors.onPrimary
             )
         ) {
             Text(
@@ -138,7 +139,7 @@ fun MoveTrackConsentScreen(
             onClick = onBack,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Text(
@@ -162,6 +163,11 @@ private fun PrivacyPoint(
     title: String,
     description: String
 ) {
+    val colors = MaterialTheme.colorScheme
+    val MoveInk = colors.onSurface
+    val MoveMuted = colors.onSurfaceVariant
+    val MoveTeal = colors.primary
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)

@@ -104,6 +104,7 @@ fun AppNavigation() {
         composable(Routes.PATIENT_DASHBOARD) {
             PatientDashboardScreen(
                 carePlanViewModel = carePlanViewModel,
+                journalViewModel = journalViewModel,
                 onOpenMoveTrack = {
                     navController.navigate(Routes.MOVETRACK_CONSENT)
                 },
@@ -112,6 +113,9 @@ fun AppNavigation() {
                 },
                 onOpenJournal = {
                     navController.navigate(Routes.WELLBEING_JOURNAL)
+                },
+                onOpenMoveTrackPrivacy = {
+                    navController.navigate(Routes.MOVETRACK_PRIVACY_SETTINGS)
                 }
             )
         }

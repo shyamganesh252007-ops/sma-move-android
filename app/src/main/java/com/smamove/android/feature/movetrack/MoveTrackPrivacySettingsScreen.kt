@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,17 +42,18 @@ import androidx.compose.ui.platform.LocalContext
 import java.text.DateFormat
 import java.util.Date
 
-private val PrivacyBg = Color(0xFFF5F8FC)
-private val PrivacyInk = Color(0xFF10243A)
-private val PrivacyMuted = Color(0xFF586B7B)
-private val PrivacyTeal = Color(0xFF087F76)
-private val PrivacyTealDark = Color(0xFF06665F)
-private val PrivacySoft = Color(0xFFE5F4F1)
-
 @Composable
 fun MoveTrackPrivacySettingsScreen(
     onBack: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+    val PrivacyBg = colors.background
+    val PrivacyInk = colors.onSurface
+    val PrivacyMuted = colors.onSurfaceVariant
+    val PrivacyTeal = colors.primary
+    val PrivacyTealDark = colors.primary
+    val PrivacySoft = colors.primaryContainer
+
     val context = LocalContext.current
     val store = remember(context) {
         MoveTrackConsentStore(context)
@@ -103,7 +105,7 @@ fun MoveTrackPrivacySettingsScreen(
                 ) {
                     Text(
                         text = "Clear record",
-                        color = Color(0xFFB3261E)
+                        color = colors.error
                     )
                 }
             },
@@ -116,7 +118,7 @@ fun MoveTrackPrivacySettingsScreen(
                     Text("Cancel")
                 }
             },
-            containerColor = Color.White
+            containerColor = colors.surface
         )
     }
 
@@ -237,7 +239,7 @@ fun MoveTrackPrivacySettingsScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = colors.surface
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 0.dp
@@ -287,7 +289,7 @@ fun MoveTrackPrivacySettingsScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(16.dp),
             enabled = record != null
         ) {
@@ -302,11 +304,11 @@ fun MoveTrackPrivacySettingsScreen(
             onClick = onBack,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .heightIn(min = 48.dp),
             shape = RoundedCornerShape(17.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrivacyTealDark,
-                contentColor = Color.White
+                contentColor = colors.onPrimary
             )
         ) {
             Text(
@@ -338,11 +340,17 @@ private fun PrivacyPreferenceCard(
     buttonLabel: String,
     onAction: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+    val PrivacyInk = colors.onSurface
+    val PrivacyMuted = colors.onSurfaceVariant
+    val PrivacyTeal = colors.primary
+    val PrivacyTealDark = colors.primary
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = colors.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp
@@ -363,7 +371,7 @@ private fun PrivacyPreferenceCard(
                             color = if (enabled) {
                                 PrivacyTeal
                             } else {
-                                Color(0xFF8996A2)
+                                colors.outline
                             },
                             shape = CircleShape
                         )
@@ -400,7 +408,7 @@ private fun PrivacyPreferenceCard(
                 enabled = enabled,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .heightIn(min = 48.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Text(

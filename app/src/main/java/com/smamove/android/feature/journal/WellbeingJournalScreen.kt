@@ -4,27 +4,26 @@ package com.smamove.android.feature.journal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val JournalBackground = Color(0xFFF8F9FF)
-private val JournalSurface = Color(0xFFEFF4FF)
-private val JournalBlue = Color(0xFFDCE9FF)
-private val JournalTeal = Color(0xFF008378)
-private val JournalInk = Color(0xFF0B1C30)
-private val JournalMuted = Color(0xFF3D4947)
-private val JournalWhite = Color.White
+import androidx.compose.runtime.key
 
 @Composable
 fun WellbeingJournalScreen(
@@ -35,6 +34,14 @@ fun WellbeingJournalScreen(
     var selectedComfort by remember { mutableStateOf("Comfortable") }
     var notes by remember { mutableStateOf("") }
     var saveMessage by remember { mutableStateOf<String?>(null) }
+    val colors = MaterialTheme.colorScheme
+    val JournalBackground = colors.background
+    val JournalSurface = colors.surfaceVariant
+    val JournalBlue = colors.secondaryContainer
+    val JournalTeal = colors.primary
+    val JournalInk = colors.onSurface
+    val JournalMuted = colors.onSurfaceVariant
+    val JournalWhite = colors.surface
 
     val moods = listOf(
         "😴" to "Low",
@@ -51,7 +58,7 @@ fun WellbeingJournalScreen(
     )
 
     Scaffold(
-        containerColor = JournalBackground,
+        containerColor = colors.background,
         topBar = {
             Row(
                 modifier = Modifier
@@ -62,8 +69,11 @@ fun WellbeingJournalScreen(
             ) {
                 Surface(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clickable { onBack() },
+                        .size(48.dp)
+                        .clickable(role = Role.Button) { onBack() }
+                        .semantics {
+                            contentDescription = "Go back"
+                        },
                     shape = CircleShape,
                     color = JournalSurface
                 ) {
@@ -160,10 +170,17 @@ fun WellbeingJournalScreen(
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(76.dp)
-                                    .clickable {
+                                    .heightIn(min = 80.dp)
+                                    .selectable(
+                                        selected = selected,
+                                        role = Role.RadioButton,
+                                        onClick = {
                                         selectedMood = label
                                         saveMessage = null
+                                        }
+                                    )
+                                    .semantics {
+                                        contentDescription = "$label energy"
                                     },
                                 shape = RoundedCornerShape(13.dp),
                                 color = if (selected) JournalWhite else JournalBackground,
@@ -225,19 +242,20 @@ fun WellbeingJournalScreen(
                                         JournalBackground
                                     }
                                 )
-                                .clickable {
-                                    selectedComfort = option
-                                    saveMessage = null
-                                }
+                                .selectable(
+                                    selected = selectedComfort == option,
+                                    role = Role.RadioButton,
+                                    onClick = {
+                                        selectedComfort = option
+                                        saveMessage = null
+                                    }
+                                )
                                 .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = selectedComfort == option,
-                                onClick = {
-                                    selectedComfort = option
-                                    saveMessage = null
-                                },
+                                onClick = null,
                                 colors = RadioButtonDefaults.colors(
                                     selectedColor = JournalTeal
                                 )
@@ -294,13 +312,23 @@ fun WellbeingJournalScreen(
                 )
             }
 
-            if (saveMessage != null) {
-                Text(
-                    saveMessage!!,
-                    color = JournalTeal,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
+            AnimatedVisibility(visible = saveMessage != null) {
+                Surface(
+                    color = colors.primaryContainer,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = saveMessage.orEmpty(),
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .semantics {
+                                liveRegion = LiveRegionMode.Polite
+                            },
+                        color = colors.onPrimaryContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
 
             Button(
@@ -315,7 +343,7 @@ fun WellbeingJournalScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp),
+                    .heightIn(min = 48.dp),
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = JournalTeal
@@ -361,6 +389,7 @@ fun WellbeingJournalScreen(
                 }
             } else {
                 viewModel.entries.forEach { entry ->
+                    key(entry.id) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -398,6 +427,7 @@ fun WellbeingJournalScreen(
                                 )
                             }
                         }
+                    }
                     }
                 }
             }

@@ -1,446 +1,298 @@
-
 package com.smamove.android.feature.movetrack
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.smamove.android.ui.components.SmaPrimaryButton
+import com.smamove.android.ui.components.SmaSecondaryButton
+import com.smamove.android.ui.components.SmaStatusChip
+import com.smamove.android.ui.components.SmaTopAppBar
+import com.smamove.android.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoveTrackConsentOptionsScreen(
     onContinue: () -> Unit,
     onBack: () -> Unit
 ) {
-    val colors = MaterialTheme.colorScheme
-    val ConsentBg = colors.background
-    val ConsentInk = colors.onSurface
-    val ConsentMuted = colors.onSurfaceVariant
-    val ConsentTeal = colors.primary
-    val ConsentTealDark = colors.primary
-    val ConsentSoft = colors.primaryContainer
-
     val context = LocalContext.current
-    val store = remember(context) {
-        MoveTrackConsentStore(context)
+    val store = remember(context) { MoveTrackConsentStore(context) }
+
+    var cameraOptIn by remember { mutableStateOf(false) }
+    var caregiverSharingOptIn by remember { mutableStateOf(false) }
+    var loaded by remember { mutableStateOf(false) }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraOptIn = true
+            Toast.makeText(context, "Android camera permission granted.", Toast.LENGTH_SHORT).show()
+        } else {
+            cameraOptIn = false
+            Toast.makeText(
+                context,
+                "Camera permission was denied. Android runtime permission is required for vision guidance.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
-    var cameraConsent by remember {
-        mutableStateOf(false)
+    LaunchedEffect(Unit) {
+        val currentChoices = store.getChoices()
+        if (currentChoices != null) {
+            cameraOptIn = currentChoices.cameraOptIn
+            caregiverSharingOptIn = currentChoices.caregiverSharingOptIn
+        }
+        loaded = true
     }
 
-    var caregiverSharing by remember {
-        mutableStateOf(false)
-    }
-
-    var preferencesLoaded by remember {
-        mutableStateOf(false)
-    }
-
-    var isSaving by remember {
-        mutableStateOf(false)
-    }
-    var saveError by remember {
-        mutableStateOf(false)
-    }
-
-    // Restore previously saved choices when the screen opens.
-    LaunchedEffect(store) {
-        val saved = store.getChoices()
-
-        cameraConsent = saved?.cameraOptIn ?: false
-        caregiverSharing = saved?.caregiverSharingOptIn ?: false
-        preferencesLoaded = true
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ConsentBg)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 22.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        Text(
-            text = "SMA-MOVE  /  ETHICS SHIELD",
-            color = ConsentTealDark,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.2.sp
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-            Text(
-                text = "Your data.\nYour decision.",
-                color = ConsentInk,
-                fontSize = 32.sp,
-                lineHeight = 39.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "Review each choice carefully. Camera analysis " +
-                        "and caregiver sharing are separate decisions.",
-                color = ConsentMuted,
-                fontSize = 16.sp,
-                lineHeight = 25.sp
+    Scaffold(
+        containerColor = WarmStoneBackground,
+        topBar = {
+            SmaTopAppBar(
+                title = "Consent Preferences",
+                onBack = onBack
             )
         }
-
-        ConsentCard(
-            number = "01",
-            title = "Camera-based movement analysis",
-            description = "The planned feature may use camera frames " +
-                    "to estimate selected body landmarks. The model is " +
-                    "not connected yet, and this screen does not request camera access."
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            ConsentCheck(
-                checked = cameraConsent,
-                enabled = preferencesLoaded && !isSaving,
-                onCheckedChange = { cameraConsent = it },
-                title = "I understand and opt in to the planned " +
-                        "camera-based feature.",
-                description = "This records your prototype preference " +
-                        "only. It does not grant Android camera permission " +
-                        "or start a movement session."
-            )
-        }
-
-        ConsentCard(
-            number = "02",
-            title = "Storage and privacy",
-            description = "The intended design prioritises on-device " +
-                    "processing. Before real use, SMA-Move must disclose " +
-                    "what data is stored, how it is protected, how long it " +
-                    "is retained, and whether any data leaves the device."
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                Box(
-                    modifier = Modifier
-                        .padding(top = 5.dp)
-                        .size(8.dp)
-                        .background(ConsentTeal, CircleShape)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SmaStatusChip(
+                    text = "STEP 3 OF 3: PREFERENCES",
+                    icon = Icons.Default.Tune,
+                    containerColor = SagePrimaryFixed,
+                    contentColor = OnSagePrimaryFixed
                 )
-
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Preferences are stored locally. This " +
-                            "prototype has not yet implemented encrypted " +
-                            "consent storage or a complete retention policy.",
-                    color = ConsentMuted,
-                    fontSize = 13.sp,
+                    text = "Select your participation choices",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnWarmStone
+                )
+                Text(
+                    text = "Configure each option independently. You can change or withdraw these choices at any time in the Privacy Centre.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnWarmStoneVariant,
                     lineHeight = 20.sp
                 )
             }
-        }
 
-        ConsentCard(
-            number = "03",
-            title = "Caregiver sharing",
-            description = "Sharing information with a family member " +
-                    "or caregiver should be optional and limited to " +
-                    "records the patient chooses to share."
-        ) {
-            ConsentCheck(
-                checked = caregiverSharing,
-                enabled = preferencesLoaded && !isSaving,
-                onCheckedChange = { caregiverSharing = it },
-                title = "I would like to explore optional caregiver sharing.",
-                description = "This preference is saved locally only. " +
-                        "No records are shared by selecting this box."
-            )
-        }
-
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = colors.surface
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 0.dp
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Option 1: Camera Vision Processing
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
             ) {
-                Text(
-                    text = "You can change your mind",
-                    color = ConsentInk,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(
-                    text = "Untick either choice to withdraw that " +
-                            "preference, then save again. Declining camera " +
-                            "analysis does not prevent you from using " +
-                            "other SMA-Move features.",
-                    color = ConsentMuted,
-                    fontSize = 14.sp,
-                    lineHeight = 22.sp
-                )
-            }
-        }
-
-        Button(
-            onClick = {
-                isSaving = true
-                saveError = false
-
-                try {
-                    store.saveChoices(
-                        cameraOptIn = cameraConsent,
-                        caregiverSharingOptIn = caregiverSharing
-                    )
-
-                    Toast.makeText(
-                        context,
-                        "Preferences saved on this device.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    onContinue()
-                } catch (exception: Exception) {
-                    saveError = true
-                    Toast.makeText(
-                        context,
-                        "Could not save preferences. Please try again.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } finally {
-                    isSaving = false
-                }
-            },
-            enabled = preferencesLoaded && !isSaving,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp),
-            shape = RoundedCornerShape(17.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ConsentTealDark,
-                contentColor = colors.onPrimary,
-                disabledContainerColor = colors.surfaceVariant,
-                disabledContentColor = colors.onSurfaceVariant
-            )
-        ) {
-            Text(
-                text = when {
-                    !preferencesLoaded -> "Loading preferences..."
-                    isSaving -> "Saving..."
-                    else -> "Save preferences"
-                },
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        if (saveError) {
-            Text(
-                text = "Preferences could not be saved. Your previous saved choices are unchanged.",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics {
-                        liveRegion = LiveRegionMode.Polite
-                    },
-                color = colors.error,
-                fontSize = 14.sp,
-                lineHeight = 21.sp
-            )
-        }
-
-        OutlinedButton(
-            onClick = onBack,
-            enabled = !isSaving,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp),
-            shape = RoundedCornerShape(17.dp)
-        ) {
-            Text(
-                text = "Not now — go back",
-                color = ConsentInk,
-                fontSize = 14.sp
-            )
-        }
-
-        Text(
-            text = "Prototype only: preferences are saved locally. " +
-                    "Camera permission is not requested and no data is shared.",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp),
-            color = ConsentMuted,
-            fontSize = 12.sp,
-            lineHeight = 19.sp
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-    }
-}
-
-@Composable
-private fun ConsentCard(
-    number: String,
-    title: String,
-    description: String,
-    content: @Composable () -> Unit
-) {
-    val colors = MaterialTheme.colorScheme
-    val ConsentInk = colors.onSurface
-    val ConsentMuted = colors.onSurfaceVariant
-    val ConsentTealDark = colors.primary
-    val ConsentSoft = colors.primaryContainer
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(13.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(13.dp),
-                    color = ConsentSoft
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(SagePrimaryContainer, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Videocam,
+                                    contentDescription = null,
+                                    tint = OnSagePrimaryContainer
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Camera Vision Processing",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OnWarmStone
+                                )
+                                Text(
+                                    text = "Enable on-device skeletal tracking during voluntary movement sessions.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OnWarmStoneVariant
+                                )
+                            }
+                        }
+
+                        Switch(
+                            checked = cameraOptIn,
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    val currentPermission = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.CAMERA
+                                    )
+                                    if (currentPermission == PackageManager.PERMISSION_GRANTED) {
+                                        cameraOptIn = true
+                                    } else {
+                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                    }
+                                } else {
+                                    cameraOptIn = false
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = OnSagePrimary,
+                                checkedTrackColor = SagePrimary
+                            )
+                        )
+                    }
+
+                    Surface(
+                        color = WarmStoneBackground,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "Consent and Android runtime permission are both required before any camera guidance starts.",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = OnWarmStone
+                            )
+                            Text(
+                                text = "Declining camera tracking still allows you to complete all manual care plans and journal entries.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = OutlineColor
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Option 2: Caregiver Data Sharing
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(OliveSecondaryContainer, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Group,
+                                    contentDescription = null,
+                                    tint = OnOliveSecondaryContainer
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Caregiver Update Sharing",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OnWarmStone
+                                )
+                                Text(
+                                    text = "Share completed task summaries with your authorized CareCircle.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OnWarmStoneVariant
+                                )
+                            }
+                        }
+
+                        Switch(
+                            checked = caregiverSharingOptIn,
+                            onCheckedChange = { caregiverSharingOptIn = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = OnSagePrimary,
+                                checkedTrackColor = SagePrimary
+                            )
+                        )
+                    }
+
+                    Surface(
+                        color = WarmStoneBackground,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
-                            text = number,
-                            color = ConsentTealDark,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "In this demo, sharing preferences are saved locally. No external accounts are granted access without your explicit in-app confirmation.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OutlineColor,
+                            modifier = Modifier.padding(10.dp)
                         )
                     }
                 }
-
-                Text(
-                    text = title,
-                    color = ConsentInk,
-                    fontSize = 17.sp,
-                    lineHeight = 23.sp,
-                    fontWeight = FontWeight.Bold
-                )
             }
 
-            Text(
-                text = description,
-                color = ConsentMuted,
-                fontSize = 14.sp,
-                lineHeight = 22.sp
+            // Save Choices Button
+            SmaPrimaryButton(
+                text = "Save Preferences & Continue",
+                leadingIcon = Icons.Default.Save,
+                onClick = {
+                    try {
+                        store.saveChoices(cameraOptIn, caregiverSharingOptIn)
+                        Toast.makeText(
+                            context,
+                            "Consent preferences saved on this device.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        onContinue()
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error saving choices: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
 
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ConsentCheck(
-    checked: Boolean,
-    enabled: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    title: String,
-    description: String
-) {
-    val colors = MaterialTheme.colorScheme
-    val ConsentInk = colors.onSurface
-    val ConsentMuted = colors.onSurfaceVariant
-    val ConsentTealDark = colors.primary
-    val ConsentSoft = colors.primaryContainer
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                ConsentSoft.copy(alpha = 0.65f),
-                RoundedCornerShape(15.dp)
-            )
-            .padding(10.dp),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Checkbox(
-            checked = checked,
-            enabled = enabled,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(
-                checkedColor = ConsentTealDark,
-                uncheckedColor = ConsentMuted,
-                checkmarkColor = colors.onPrimary
-            )
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 9.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            Text(
-                text = title,
-                color = ConsentInk,
-                fontSize = 14.sp,
-                lineHeight = 21.sp,
-                fontWeight = FontWeight.SemiBold
+            SmaSecondaryButton(
+                text = "Back",
+                onClick = onBack
             )
 
-            Text(
-                text = description,
-                color = ConsentMuted,
-                fontSize = 12.sp,
-                lineHeight = 18.sp
-            )
+            Spacer(Modifier.height(36.dp))
         }
     }
 }

@@ -1,105 +1,69 @@
-
 package com.smamove.android.feature.journal
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.key
+import com.smamove.android.ui.components.*
+import com.smamove.android.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WellbeingJournalScreen(
     viewModel: JournalViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenSymptomNotes: () -> Unit = {},
+    onCheckInConfirmed: () -> Unit = {},
+    onNavigateHome: () -> Unit = {},
+    onNavigateCarePlan: () -> Unit = {},
+    onNavigateProfile: () -> Unit = {}
 ) {
-    var selectedMood by remember { mutableStateOf("Good") }
+    var selectedEnergy by remember { mutableStateOf("Steady") }
+    var selectedFatigue by remember { mutableStateOf("Noticeable") }
     var selectedComfort by remember { mutableStateOf("Comfortable") }
     var notes by remember { mutableStateOf("") }
-    var saveMessage by remember { mutableStateOf<String?>(null) }
-    val colors = MaterialTheme.colorScheme
-    val JournalBackground = colors.background
-    val JournalSurface = colors.surfaceVariant
-    val JournalBlue = colors.secondaryContainer
-    val JournalTeal = colors.primary
-    val JournalInk = colors.onSurface
-    val JournalMuted = colors.onSurfaceVariant
-    val JournalWhite = colors.surface
+    var saveFeedback by remember { mutableStateOf<String?>(null) }
 
-    val moods = listOf(
-        "😴" to "Low",
-        "🌤️" to "Fair",
-        "✨" to "Good",
-        "⚡" to "Great",
-        "🚀" to "Peak"
-    )
-
-    val comfortOptions = listOf(
-        "Comfortable",
-        "Some discomfort",
-        "Very uncomfortable"
-    )
+    val energyOptions = listOf("Low", "Mild", "Steady", "Good", "High")
+    val fatigueOptions = listOf("Minimal", "Noticeable", "Heavy", "Severe")
+    val comfortOptions = listOf("Comfortable", "Some discomfort", "Assistance needed")
 
     Scaffold(
-        containerColor = colors.background,
+        containerColor = WarmStoneBackground,
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clickable(role = Role.Button) { onBack() }
-                        .semantics {
-                            contentDescription = "Go back"
-                        },
-                    shape = CircleShape,
-                    color = JournalSurface
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("←", fontSize = 25.sp, color = JournalInk)
+            SmaTopAppBar(
+                title = "Wellbeing Journal",
+                onBack = onBack
+            )
+        },
+        bottomBar = {
+            SmaBottomNavigationBar(
+                currentDestination = SmaNavDestination.WELLBEING,
+                onNavigate = { dest ->
+                    when (dest) {
+                        SmaNavDestination.HOME -> onNavigateHome()
+                        SmaNavDestination.CARE_PLAN -> onNavigateCarePlan()
+                        SmaNavDestination.WELLBEING -> {}
+                        SmaNavDestination.PROFILE -> onNavigateProfile()
                     }
                 }
-
-                Spacer(Modifier.width(14.dp))
-
-                Column {
-                    Text(
-                        "DAILY WELLBEING",
-                        color = JournalTeal,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp
-                    )
-                    Text(
-                        "My journal",
-                        color = JournalInk,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+            )
         }
     ) { padding ->
         Column(
@@ -107,104 +71,91 @@ fun WellbeingJournalScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Privacy / demo notice
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = JournalBlue
-            ) {
-                Column(Modifier.padding(18.dp)) {
-                    Text(
-                        "A SPACE FOR YOU",
-                        color = JournalTeal,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.8.sp
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "Check in with yourself at your own pace. " +
-                                "This is a demo journal; entries are currently kept " +
-                                "in memory and are not sent to your care team.",
-                        color = JournalInk,
-                        fontSize = 14.sp,
-                        lineHeight = 21.sp
-                    )
-                }
+            // Header Section
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "DAILY REFLECTION",
+                    color = SagePrimary,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = "How are you feeling today?",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnWarmStone
+                )
+                Text(
+                    text = "Check in with your body. Observations are stored locally on this device.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnWarmStoneVariant
+                )
             }
 
-            // Mood selector
-            Surface(
+            // Energy Level Selector
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                color = JournalSurface
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
             ) {
                 Column(
                     modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        "How are you feeling today?",
-                        color = JournalInk,
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Bolt,
+                                contentDescription = null,
+                                tint = SagePrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Energy Level",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = OnWarmStone
+                            )
+                        }
 
-                    Text(
-                        "Choose the energy level that feels right for you.",
-                        color = JournalMuted,
-                        fontSize = 14.sp
-                    )
+                        SmaStatusChip(
+                            text = selectedEnergy,
+                            containerColor = SagePrimaryFixed,
+                            contentColor = OnSagePrimaryFixed
+                        )
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        moods.forEach { (emoji, label) ->
-                            val selected = selectedMood == label
-
+                        energyOptions.forEach { energy ->
+                            val isSelected = selectedEnergy == energy
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = 80.dp)
-                                    .selectable(
-                                        selected = selected,
-                                        role = Role.RadioButton,
-                                        onClick = {
-                                        selectedMood = label
-                                        saveMessage = null
-                                        }
-                                    )
-                                    .semantics {
-                                        contentDescription = "$label energy"
-                                    },
-                                shape = RoundedCornerShape(13.dp),
-                                color = if (selected) JournalWhite else JournalBackground,
-                                border = if (selected) {
-                                    androidx.compose.foundation.BorderStroke(
-                                        2.dp, JournalTeal
-                                    )
-                                } else null
+                                    .height(48.dp)
+                                    .clickable(role = Role.RadioButton) { selectedEnergy = energy },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) SagePrimaryContainer else SurfaceContainerHigh
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Text(emoji, fontSize = 21.sp)
-                                    Spacer(Modifier.height(4.dp))
+                                Box(contentAlignment = Alignment.Center) {
                                     Text(
-                                        label,
-                                        color = JournalInk,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (selected) {
-                                            FontWeight.Bold
-                                        } else {
-                                            FontWeight.Medium
-                                        }
+                                        text = energy,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) OnSagePrimaryContainer else OnWarmStone
                                     )
                                 }
                             }
@@ -213,224 +164,238 @@ fun WellbeingJournalScreen(
                 }
             }
 
-            // Comfort check-in
-            Surface(
+            // Fatigue Level Selector
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = JournalWhite
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
             ) {
                 Column(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Psychology,
+                                contentDescription = null,
+                                tint = TerracottaTertiary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Fatigue Level",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = OnWarmStone
+                            )
+                        }
+
+                        SmaStatusChip(
+                            text = selectedFatigue,
+                            containerColor = TerracottaTertiaryFixed,
+                            contentColor = OnTerracottaTertiaryFixed
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        fatigueOptions.forEach { fatigue ->
+                            val isSelected = selectedFatigue == fatigue
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .clickable(role = Role.RadioButton) { selectedFatigue = fatigue },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) TerracottaTertiaryContainer else SurfaceContainerHigh
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = fatigue,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) OnTerracottaTertiaryContainer else OnWarmStone
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Comfort Level Radio Group
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     Text(
-                        "How comfortable do you feel?",
-                        color = JournalInk,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
+                        text = "Physical Comfort",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = OnWarmStone
                     )
 
                     comfortOptions.forEach { option ->
+                        val isSelected = selectedComfort == option
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (selectedComfort == option) {
-                                        JournalBlue
-                                    } else {
-                                        JournalBackground
-                                    }
-                                )
-                                .selectable(
-                                    selected = selectedComfort == option,
-                                    role = Role.RadioButton,
-                                    onClick = {
-                                        selectedComfort = option
-                                        saveMessage = null
-                                    }
-                                )
-                                .padding(14.dp),
+                                .background(if (isSelected) OliveSecondaryContainer else WarmStoneBackground)
+                                .clickable(role = Role.RadioButton) { selectedComfort = option }
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = selectedComfort == option,
-                                onClick = null,
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = JournalTeal
-                                )
+                                selected = isSelected,
+                                onClick = { selectedComfort = option },
+                                colors = RadioButtonDefaults.colors(selectedColor = DeepOliveSecondary)
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                option,
-                                color = JournalInk,
-                                fontSize = 14.sp
+                                text = option,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (isSelected) OnOliveSecondaryContainer else OnWarmStone
                             )
                         }
                     }
                 }
             }
 
-            // Journal notes
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Reflection Notes Field
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Anything you'd like to note?",
-                    color = JournalInk,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = "Personal Reflection (Optional)",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnWarmStone
                 )
-
-                Text(
-                    "You can write about your day, comfort, or anything " +
-                            "you'd like to remember.",
-                    color = JournalMuted,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp
-                )
-
                 OutlinedTextField(
                     value = notes,
-                    onValueChange = {
-                        notes = it
-                        saveMessage = null
-                    },
+                    onValueChange = { notes = it },
+                    placeholder = { Text("Write about your breathing, sleep, or posture today...") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 130.dp),
-                    placeholder = {
-                        Text("Write a note (optional)…")
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    minLines = 4,
-                    maxLines = 7,
+                        .heightIn(min = 100.dp),
+                    minLines = 3,
+                    shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = JournalTeal,
-                        unfocusedBorderColor = JournalBlue,
-                        focusedContainerColor = JournalWhite,
-                        unfocusedContainerColor = JournalWhite
+                        focusedBorderColor = SagePrimary,
+                        unfocusedBorderColor = OutlineVariantColor
                     )
                 )
             }
 
-            AnimatedVisibility(visible = saveMessage != null) {
-                Surface(
-                    color = colors.primaryContainer,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = saveMessage.orEmpty(),
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .semantics {
-                                liveRegion = LiveRegionMode.Polite
-                            },
-                        color = colors.onPrimaryContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
+            // Deep Symptom Logger Link
+            SmaOutlinedButton(
+                text = "Detailed Symptom & Mobility Notes",
+                leadingIcon = Icons.Default.Healing,
+                onClick = onOpenSymptomNotes
+            )
 
-            Button(
+            // Save Reflection Button
+            SmaPrimaryButton(
+                text = "Save Today's Reflection",
+                leadingIcon = Icons.Default.Check,
                 onClick = {
                     viewModel.saveEntry(
-                        mood = selectedMood,
+                        mood = selectedEnergy,
                         comfortLevel = selectedComfort,
-                        notes = notes
+                        notes = notes,
+                        fatigueLevel = selectedFatigue
                     )
                     notes = ""
-                    saveMessage = "Your demo journal entry has been saved."
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = JournalTeal
-                )
-            ) {
-                Text(
-                    "Save wellbeing entry",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+                    onCheckInConfirmed()
+                }
+            )
 
-            // Previous entries
+            // Previous Entries Section
             Text(
-                "Previous entries",
-                color = JournalInk,
-                fontSize = 21.sp,
-                fontWeight = FontWeight.SemiBold
+                text = "Recent Journal Records",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = OnWarmStone
             )
 
             if (viewModel.entries.isEmpty()) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color = JournalSurface
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            "Your journal starts here",
-                            color = JournalInk,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            "Saved entries will appear here during this session.",
-                            color = JournalMuted,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
+                Text(
+                    text = "No saved check-ins yet. Start by saving your reflection above.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OutlineColor
+                )
             } else {
                 viewModel.entries.forEach { entry ->
-                    key(entry.id) {
-                    Surface(
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = JournalSurface
+                        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
                     ) {
                         Column(
-                            modifier = Modifier.padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(
-                                "${entry.mood} energy · ${entry.comfortLevel}",
-                                color = JournalTeal,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-
-                            Text(
-                                viewModel.formatDate(entry.timestamp),
-                                color = JournalMuted,
-                                fontSize = 12.sp
-                            )
-
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    SmaStatusChip(
+                                        text = "${entry.mood} Energy",
+                                        containerColor = SagePrimaryFixed,
+                                        contentColor = OnSagePrimaryFixed
+                                    )
+                                    SmaStatusChip(
+                                        text = entry.comfortLevel,
+                                        containerColor = OliveSecondaryContainer,
+                                        contentColor = OnOliveSecondaryContainer
+                                    )
+                                }
+                                Text(
+                                    text = viewModel.formatDate(entry.timestamp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OutlineColor
+                                )
+                            }
                             if (entry.notes.isNotBlank()) {
                                 Text(
-                                    entry.notes,
-                                    color = JournalInk,
-                                    fontSize = 14.sp,
-                                    lineHeight = 21.sp
+                                    text = entry.notes,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = OnWarmStone
                                 )
-                            } else {
+                            }
+                            if (entry.symptomNotes.isNotBlank()) {
                                 Text(
-                                    "No additional notes.",
-                                    color = JournalMuted,
-                                    fontSize = 14.sp
+                                    text = "Symptom Note: ${entry.symptomNotes}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TerracottaTertiary
                                 )
                             }
                         }
                     }
-                    }
                 }
             }
+
+            // Bottom clearance so journal records are never clipped by bottom navigation
+            Spacer(Modifier.height(48.dp))
         }
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import com.smamove.android.ui.theme.SMAAndroidTheme
 
 @Composable
@@ -35,35 +36,54 @@ fun PatientLoginScreen(
     onNavigateBack: () -> Unit,
     onLoginSuccess: () -> Unit
 ) {
+    val context = LocalContext.current
+
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
-    var demoLoginSuccessful by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+    var demoLoginSuccessful by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     PatientLoginContent(
         email = email,
         password = password,
         errorMessage = errorMessage,
         demoLoginSuccessful = demoLoginSuccessful,
+
         onEmailChange = {
             email = it
             errorMessage = null
         },
+
         onPasswordChange = {
             password = it
             errorMessage = null
         },
+
         onSignIn = {
             if (email.isBlank() || password.isBlank()) {
-                errorMessage = "Enter any email and password to continue."
+                errorMessage =
+                    "Enter any email and password to continue."
             } else {
-                // Demo-only access. No real authentication is performed.
+                // Demo-only login. No backend authentication.
                 demoLoginSuccessful = true
                 errorMessage = null
             }
         },
+
         onNavigateBack = onNavigateBack,
-        onLoginSuccess = onLoginSuccess
+
+        onLoginSuccess = {
+            // Remember the patient demo session.
+            AuthSessionStore(context).saveSession(
+                AuthSessionStore.ROLE_PATIENT
+            )
+
+            onLoginSuccess()
+        }
     )
 }
 
@@ -82,6 +102,7 @@ private fun PatientLoginContent(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -107,12 +128,15 @@ private fun PatientLoginContent(
             Spacer(Modifier.height(24.dp))
 
             if (demoLoginSuccessful) {
+
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primaryContainer,
                     shape = MaterialTheme.shapes.large
                 ) {
-                    Column(Modifier.padding(20.dp)) {
+                    Column(
+                        Modifier.padding(20.dp)
+                    ) {
                         Text(
                             text = "✓ Demo Login Successful",
                             style = MaterialTheme.typography.titleLarge,
@@ -147,7 +171,9 @@ private fun PatientLoginContent(
                         }
                     }
                 }
+
             } else {
+
                 OutlinedTextField(
                     value = email,
                     onValueChange = onEmailChange,
@@ -179,6 +205,7 @@ private fun PatientLoginContent(
 
                 if (errorMessage != null) {
                     Spacer(Modifier.height(12.dp))
+
                     Text(
                         text = errorMessage,
                         color = MaterialTheme.colorScheme.error,

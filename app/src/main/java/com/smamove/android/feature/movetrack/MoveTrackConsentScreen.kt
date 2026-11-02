@@ -1,199 +1,212 @@
-
 package com.smamove.android.feature.movetrack
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.smamove.android.ui.components.SmaPrimaryButton
+import com.smamove.android.ui.components.SmaSecondaryButton
+import com.smamove.android.ui.components.SmaStatusChip
+import com.smamove.android.ui.components.SmaTopAppBar
+import com.smamove.android.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoveTrackConsentScreen(
     onContinue: () -> Unit,
     onBack: () -> Unit
 ) {
-    val colors = MaterialTheme.colorScheme
-    val MoveBackground = colors.background
-    val MoveInk = colors.onSurface
-    val MoveMuted = colors.onSurfaceVariant
-    val MoveTeal = colors.primary
-    val MoveCard = colors.primaryContainer
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MoveBackground)
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
-    ) {
-        Text(
-            text = "MOVETRACK",
-            color = MoveTeal,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
-        )
-
-        Text(
-            text = "Your movement, your choice",
-            color = MoveInk,
-            fontSize = 29.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 36.sp
-        )
-
-        Text(
-            text = "An optional movement session designed " +
-                    "around your comfort and preferences.",
-            color = MoveMuted,
-            fontSize = 16.sp,
-            lineHeight = 24.sp
-        )
-
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MoveCard
-            ),
-            shape = RoundedCornerShape(22.dp)
+    Scaffold(
+        containerColor = WarmStoneBackground,
+        topBar = {
+            SmaTopAppBar(
+                title = "MoveTrack",
+                onBack = onBack
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SmaStatusChip(
+                    text = "OPTIONAL RESEARCH PROTOTYPE",
+                    icon = Icons.Default.Science,
+                    containerColor = SagePrimaryFixed,
+                    contentColor = OnSagePrimaryFixed
+                )
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Your privacy comes first",
-                    color = MoveTeal,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "Your movement, your choice",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnWarmStone
                 )
                 Text(
-                    text = "The camera will not activate on this screen. " +
-                            "Before a session, you will be told what is " +
-                            "processed, what is saved, and who can access it.",
-                    color = MoveInk,
-                    fontSize = 15.sp,
-                    lineHeight = 23.sp
+                    text = "An optional, camera-based movement guidance session designed around your physical comfort and personal autonomy.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = OnWarmStoneVariant,
+                    lineHeight = 22.sp
                 )
             }
-        }
 
-        PrivacyPoint(
-            title = "You stay in control",
-            description = "Starting is optional. You can stop " +
-                    "or leave a session at any time."
-        )
+            // Privacy Guarantee Box
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
+            ) {
+                Row(
+                    modifier = Modifier.padding(18.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(OliveSecondaryContainer, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            tint = OnOliveSecondaryContainer
+                        )
+                    }
 
-        PrivacyPoint(
-            title = "Designed for privacy",
-            description = "We intend to process movement on your " +
-                    "device where feasible and avoid raw video uploads " +
-                    "by default."
-        )
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "Your privacy comes first",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = OnWarmStone
+                        )
+                        Text(
+                            text = "The camera will never activate on this screen. Before any session starts, you decide what is processed, what is stored, and who can view your summaries.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = OnWarmStoneVariant,
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
+            }
 
-        PrivacyPoint(
-            title = "Not a diagnosis",
-            description = "Experimental movement estimates are not " +
-                    "a diagnosis or a substitute for clinical assessment."
-        )
+            // Ethics Shield 3 Pillars
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                EthicsShieldPillar(
+                    icon = Icons.Default.CheckCircle,
+                    title = "Strict Patient Autonomy",
+                    description = "MoveTrack is strictly voluntary. Choosing not to participate does not affect your care plan or access to other features."
+                )
+                EthicsShieldPillar(
+                    icon = Icons.Default.Memory,
+                    title = "100% Local Processing",
+                    description = "Vision analysis runs on your device. Video frames are analyzed transiently in RAM and never transmitted over the internet."
+                )
+                EthicsShieldPillar(
+                    icon = Icons.Default.LockReset,
+                    title = "Right to Withdraw Anytime",
+                    description = "You can withdraw consent or delete saved preferences instantly from the Privacy Centre."
+                )
+            }
 
-        Spacer(modifier = Modifier.height(4.dp))
+            // Honest Disclaimer Notice
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = SurfaceContainerHigh
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = TerracottaTertiary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Clinical note: MoveTrack is experimental movement guidance, not a diagnostic medical device or substitute for clinical physiotherapy assessment.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnWarmStoneVariant,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
 
-        Button(
-            onClick = onContinue,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MoveTeal,
-                contentColor = colors.onPrimary
+            // Actions
+            SmaPrimaryButton(
+                text = "Review Informed Consent",
+                leadingIcon = Icons.AutoMirrored.Filled.ArrowForward,
+                onClick = onContinue
             )
-        ) {
-            Text(
-                "Continue to session information",
-                fontWeight = FontWeight.SemiBold
-            )
-        }
 
-        OutlinedButton(
-            onClick = onBack,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                "Not now — return to dashboard",
-                color = MoveInk
+            SmaSecondaryButton(
+                text = "Back to Dashboard",
+                onClick = onBack
             )
-        }
 
-        Text(
-            text = "You can use the rest of SMA-Move without " +
-                    "using MoveTrack.",
-            color = MoveMuted,
-            fontSize = 13.sp,
-            lineHeight = 19.sp
-        )
+            // Bottom clearance
+            Spacer(Modifier.height(48.dp))
+        }
     }
 }
 
 @Composable
-private fun PrivacyPoint(
+private fun EthicsShieldPillar(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     description: String
 ) {
-    val colors = MaterialTheme.colorScheme
-    val MoveInk = colors.onSurface
-    val MoveMuted = colors.onSurfaceVariant
-    val MoveTeal = colors.primary
-
-    Row(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
     ) {
-        Text(
-            text = "✓",
-            color = MoveTeal,
-            fontSize = 21.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            Text(
-                text = title,
-                color = MoveInk,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = SagePrimary,
+                modifier = Modifier.size(22.dp).padding(top = 2.dp)
             )
-            Text(
-                text = description,
-                color = MoveMuted,
-                fontSize = 14.sp,
-                lineHeight = 21.sp
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnWarmStone
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnWarmStoneVariant,
+                    lineHeight = 18.sp
+                )
+            }
         }
     }
 }

@@ -1,68 +1,91 @@
 package com.smamove.android.ui.theme
 
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Teal300,
-    onPrimary = Navy900,
-    primaryContainer = Color(0xFF164E51),
-    onPrimaryContainer = Color(0xFFB6F0E8),
-    secondary = Color(0xFFB9CDE0),
-    onSecondary = Navy900,
-    secondaryContainer = Navy700,
-    onSecondaryContainer = Color(0xFFE5EEFA),
-    tertiary = Teal300,
-    onTertiary = Navy900,
-    tertiaryContainer = Color(0xFF244552),
-    onTertiaryContainer = Color(0xFFD4F2EE),
-    background = Color(0xFF0D1927),
-    onBackground = Color(0xFFEAF2FA),
-    surface = Color(0xFF13273A),
-    onSurface = Color(0xFFEAF2FA),
-    surfaceVariant = Color(0xFF1C344B),
-    onSurfaceVariant = Color(0xFFC1D0DE),
-    outline = Color(0xFF91A5B6),
-    outlineVariant = Color(0xFF40566A),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005)
-)
+import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme = lightColorScheme(
-    primary = Teal700,
-    onPrimary = White,
-    primaryContainer = Color(0xFFD4F2EE),
-    onPrimaryContainer = Navy900,
-    secondary = Navy700,
-    onSecondary = White,
-    secondaryContainer = Blue100,
-    onSecondaryContainer = Navy900,
-    tertiary = Teal300,
-    onTertiary = Navy900,
-    tertiaryContainer = SurfaceBlue,
-    onTertiaryContainer = Navy900,
-    background = CanvasBlue,
-    onBackground = Navy900,
-    surface = White,
-    onSurface = Navy900,
-    surfaceVariant = Blue100,
-    onSurfaceVariant = Navy700,
-    outline = MutedBlue,
-    outlineVariant = Color(0xFFD2DEE8),
-    error = ErrorRed
+    primary = SagePrimary,
+    onPrimary = OnSagePrimary,
+    primaryContainer = SagePrimaryContainer,
+    onPrimaryContainer = OnSagePrimaryContainer,
+    inversePrimary = InversePrimary,
+    secondary = DeepOliveSecondary,
+    onSecondary = OnDeepOliveSecondary,
+    secondaryContainer = OliveSecondaryContainer,
+    onSecondaryContainer = OnOliveSecondaryContainer,
+    tertiary = TerracottaTertiary,
+    onTertiary = OnTerracottaTertiary,
+    tertiaryContainer = TerracottaTertiaryContainer,
+    onTertiaryContainer = OnTerracottaTertiaryContainer,
+    background = WarmStoneBackground,
+    onBackground = OnWarmStone,
+    surface = WarmStoneBackground,
+    onSurface = OnWarmStone,
+    surfaceVariant = SurfaceContainerHighest,
+    onSurfaceVariant = OnWarmStoneVariant,
+    surfaceTint = SurfaceTintColor,
+    inverseSurface = InverseSurface,
+    inverseOnSurface = InverseOnSurface,
+    error = ClinicalError,
+    onError = OnClinicalError,
+    errorContainer = ClinicalErrorContainer,
+    onErrorContainer = OnClinicalErrorContainer,
+    outline = OutlineColor,
+    outlineVariant = OutlineVariantColor
+)
+
+private val DarkColorScheme = darkColorScheme(
+    primary = SagePrimaryFixedDim,
+    onPrimary = OnSagePrimaryFixed,
+    primaryContainer = SagePrimary,
+    onPrimaryContainer = OnSagePrimaryContainer,
+    inversePrimary = SagePrimary,
+    secondary = OliveSecondaryFixedDim,
+    onSecondary = OnOliveSecondaryFixed,
+    secondaryContainer = DeepOliveSecondary,
+    onSecondaryContainer = OnOliveSecondaryContainer,
+    tertiary = TerracottaTertiaryFixedDim,
+    onTertiary = OnTerracottaTertiaryFixed,
+    tertiaryContainer = TerracottaTertiary,
+    onTertiaryContainer = OnTerracottaTertiaryContainer,
+    background = InverseSurface,
+    onBackground = InverseOnSurface,
+    surface = InverseSurface,
+    onSurface = InverseOnSurface,
+    surfaceVariant = OnWarmStoneVariant,
+    onSurfaceVariant = OutlineVariantColor,
+    outline = OutlineColor,
+    outlineVariant = OutlineVariantColor,
+    error = ClinicalError,
+    onError = OnClinicalError,
+    errorContainer = ClinicalErrorContainer,
+    onErrorContainer = OnClinicalErrorContainer
 )
 
 @Composable
 fun SMAAndroidTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val colorScheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
+
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        colorScheme = colorScheme,
         typography = Typography,
         content = content
     )

@@ -1,4 +1,3 @@
-
 package com.smamove.android.feature.journal
 
 import androidx.compose.runtime.mutableStateListOf
@@ -12,7 +11,10 @@ data class JournalEntry(
     val mood: String,
     val comfortLevel: String,
     val notes: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val symptomNotes: String = "",
+    val fatigueLevel: String = "Mild",
+    val mobilityAssistanceNeeded: Boolean = false
 )
 
 class JournalViewModel : ViewModel() {
@@ -22,27 +24,35 @@ class JournalViewModel : ViewModel() {
     val entries: List<JournalEntry>
         get() = _entries
 
+    val latestEntry: JournalEntry?
+        get() = _entries.firstOrNull()
+
     fun saveEntry(
         mood: String,
         comfortLevel: String,
-        notes: String
-    ) {
-        _entries.add(
-            0,
-            JournalEntry(
-                id = System.currentTimeMillis(),
-                mood = mood,
-                comfortLevel = comfortLevel,
-                notes = notes.trim(),
-                timestamp = System.currentTimeMillis()
-            )
+        notes: String,
+        symptomNotes: String = "",
+        fatigueLevel: String = "Mild",
+        mobilityAssistanceNeeded: Boolean = false
+    ): JournalEntry {
+        val entry = JournalEntry(
+            id = System.currentTimeMillis(),
+            mood = mood,
+            comfortLevel = comfortLevel,
+            notes = notes.trim(),
+            timestamp = System.currentTimeMillis(),
+            symptomNotes = symptomNotes.trim(),
+            fatigueLevel = fatigueLevel,
+            mobilityAssistanceNeeded = mobilityAssistanceNeeded
         )
+        _entries.add(0, entry)
+        return entry
     }
 
     fun formatDate(timestamp: Long): String {
         return SimpleDateFormat(
             "dd MMM yyyy, hh:mm a",
-            Locale.getDefault()
+            Locale.ENGLISH
         ).format(Date(timestamp))
     }
 }
